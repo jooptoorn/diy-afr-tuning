@@ -175,7 +175,7 @@ void loop() {
 
     */
     int rpmVal = calcRpm();
-    Serial.print("RPM= ");
+    Serial.print("RPM=");
     Serial.print(rpmVal);
     
     
@@ -196,7 +196,7 @@ void loop() {
     bool afrError = isInValidRange(afrStatusVal, afrStatExpectedValError, maxAdcDelta);
 
     //print, Note that Arduino's sprintf does not support floats so have to print it 'the ugly way'
-    Serial.print(",\tAFR= ");
+    Serial.print(",\tAFR=");
     Serial.print(afrVal);
     if (afrOperational)
       Serial.print(",\tSTATUS=OK");
@@ -206,7 +206,7 @@ void loop() {
       Serial.print(",\tSTATUS=ERROR");
     else
     {
-      Serial.print("\tSTATUS=INVALID, VAL=");
+      Serial.print("\tSTATUS=INVALID VAL=");
       float statVoltage = ((float) afrStatusVal / (float) maxAdcVal) * (float) maxAdcVolt;
       Serial.print(statVoltage);
     }
@@ -220,7 +220,7 @@ void loop() {
 
     //convert to throttle opening percentage
     float TpVal = calcTp(adcVal);
-    Serial.print(",\t TP= ");
+    Serial.print(",\t TP=");
     Serial.print(TpVal);
 
     Serial.println();
