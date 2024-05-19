@@ -1,0 +1,15 @@
+* C:\Users\joopt\OneDrive\motor\rsv mille\tuning\logger\diy-afr-tuning\electronics\tps-sensor.asc
+R1 N001 TPS-IN 22k
+R2 N002 TPS-BUF 100
+XU1-LM358 N001 TPS-BUF N003 0 TPS-BUF NC_01 NC_02 LT1008
+V§TPS TPS-IN 0 SINE(2.5 1 10)
+vbatt N003 0 14.4V
+C1 N003 0 100n
+D1 0 N002 D
+R3 TPS-PROT N002 4.7k
+.model D D
+.lib C:\Users\joopt\AppData\Local\LTspice\lib\cmp\standard.dio
+.tran 1
+.lib LTC.lib
+.backanno
+.end

@@ -1,0 +1,36 @@
+LTspice 24.0.12 for Windows
+Circuit: * C:\Users\joopt\OneDrive\motor\rsv mille\tuning\logger\diy-afr-tuning\electronics\tps-sensor.asc
+Start Time: Sun May 19 11:06:37 2024
+solver = Normal
+Maximum thread count: 8
+tnom = 27
+temp = 27
+method = modified trap
+WARNING: Less than two connections to node tps-prot.  This node is used by r3.
+Direct Newton iteration failed to find .op point.  (Use ".option noopiter" to skip.)
+Starting Gmin stepping
+Gmin = 10
+Gmin = 1.07374
+Gmin = 0.115292
+Gmin = 0.0123794
+Gmin = 0.00132923
+Gmin = 0.000142725
+Gmin = 1.5325e-05
+vernier = 0.5
+Gmin = 3.52689e-06
+vernier = 0.666667
+vernier = 0.888888
+Gmin = 7.39785e-07
+vernier = 1
+Gmin = 8.6905e-08
+Gmin = 9.33136e-09
+Gmin = 1.00195e-09
+Gmin = 1.07583e-10
+Gmin = 1.15517e-11
+Gmin = 1.24035e-12
+Gmin = 1.33182e-13
+Gmin = 0
+Gmin stepping succeeded in finding the operating point.
+
+Total elapsed time: 0.150 seconds.
+
