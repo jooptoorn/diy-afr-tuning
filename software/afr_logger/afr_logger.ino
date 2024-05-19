@@ -29,7 +29,7 @@ bool calFinished = false;
 const int afrSensorPin = A0;
 const int afrStatusPin = A4;
 const int tpsSensorPin = A5;
-const int ignTriggerPin = 3;
+const int ignTriggerPin = 2;
 const int rpmLedPin = LED_BUILTIN;
 
 /*
