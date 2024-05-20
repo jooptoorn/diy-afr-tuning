@@ -1,6 +1,6 @@
 LTspice 24.0.12 for Windows
 Circuit: * C:\Users\joopt\OneDrive\motor\rsv mille\tuning\logger\diy-afr-tuning\electronics\tps-sensor.asc
-Start Time: Sun May 19 11:06:37 2024
+Start Time: Mon May 20 18:07:14 2024
 solver = Normal
 Maximum thread count: 8
 tnom = 27
@@ -32,5 +32,5 @@ Gmin = 1.33182e-13
 Gmin = 0
 Gmin stepping succeeded in finding the operating point.
 
-Total elapsed time: 0.150 seconds.
+Total elapsed time: 0.129 seconds.
 
