@@ -75,7 +75,7 @@ const float afrGain = (20.0f - afrMin) / maxAdcVolt;
 const int afrCalExpectedVal = (int)((2.5 * (double)maxAdcVal) / (double)5.0);
 const int afrCalExpectedStatus = (int)((2.5 * (double)maxAdcVal) / (double)5.0);
 //allow up to 150mV bias difference for calibration. ADC has 5mV per LSB, hence 30xLSB
-const int maxAdcDelta = 30;
+const int maxAdcDelta = 45;
 
 //status defs
 const int afrStatExpectedValOperating = 0;
