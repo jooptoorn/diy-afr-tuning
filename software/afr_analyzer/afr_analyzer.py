@@ -2,6 +2,7 @@ import tkinter as tk
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import norm
 
 # setting grid on here is easiest
 plt.rcParams['axes.grid'] = True
@@ -16,7 +17,7 @@ ftTpVals = [0.0, 2.0, 5.0, 10.0, 20.0, 40.0, 60.0, 80.0, 100.0]
 # fuel table RPM rows in fuel table of PCIII
 # note 1: the max rpm of the V990 rotax engine is 10.500, even though the PCIII stores values up to 12k. We will omit analysis of 10.5k - 12k
 # note 2: a low-res fuel map (default) has one row per 500rpm, while a his-res map has one row per 250rpm.
-ftRpmVals = [x * 1.0 for x in range(500, 10500, 500)]
+ftRpmVals = [x * 1.0 for x in range(500, 10500+1, 500)]
 
 # parameters for extraction of log entries for analysis in fuel table
 # extract values around TPS value in range around a percentage [target*(1-val), target*(1+val)]
@@ -49,7 +50,65 @@ def extractLogVals(tps, rpm, ld):
     exstrLdIdx = np.where(np.logical_and(exstrLdRows[:,0] > rpm-ftRpmValLim, exstrLdRows[:,0] < rpm+ftRpmValLim))
     exstrLdRows = exstrLdRows[exstrLdIdx]
     
-    return
+    return exstrLdRows
+
+# calculates statistical properties of AFR values in dataset
+# data has to have same format as logdata, i.e. [rpm, tps, afr]
+def calcAfrStat(data):
+    mu, std = norm.fit(data[:,2])
+    return [mu, std]
+
+# calculates AFR [average, std dev] for the entire fuel table RPM and TPS value range
+# output data format: 
+# [[rpm=500,   tps=0, [dataset], [mu, std], [rpm=500,   tps=2, [dataset], [mu, std], .. , [rpm=500,   tps=100, [dataset], [mu, std]]
+# [[rpm=1000,  tps=0, [dataset], [mu, std], [rpm=1000,  tps=2, [dataset], [mu, std], .. , [rpm=1000,  tps=100, [dataset], [mu, std]]
+# ..
+# [[rpm=10500, tps=0, [dataset], [mu, std], [rpm=10500, tps=2, [dataset], [mu, std], .. , [rpm=10500, tps=100, [dataset], [mu, std]]
+
+def calcAfrTable(ld):
+    # works by looping all colums then rows of the fuel table,
+    # and calculating AFR statistics for all cells
+    ftAfrStat = []
+
+    for ftTp in ftTpVals:
+        ftAfrStatColumn = [[]]
+        for ftRpm in ftRpmVals:
+            afrData = extractLogVals(ftTp, ftRpm,ld)
+            afrStat = calcAfrStat(afrData)
+            ftAfrCell = [ftRpm, ftTp, afrData, afrStat]
+            if(ftAfrStatColumn==[[]]):
+                ftAfrStatColumn = [ftAfrCell]
+            else:
+                ftAfrStatColumn.append(ftAfrCell)
+            # print(len(ftAfrStatColumn))
+            # print(len(ftAfrStatColumn[0][0]))
+
+        # at this point we have the entire column, append to the rest of the AFR data table
+        if(ftAfrStat==[]):
+            ftAfrStat = [ftAfrStatColumn]
+        else:
+            ftAfrStat.append(ftAfrStatColumn)
+    
+    return ftAfrStat
+
+# print the AFR-statistic table 
+def printAfrTable(ast):
+    # top row
+    topStr = "RPM-TPS\t"
+    for tp in ftTpVals:
+        topStr = topStr + str(tp) + '\t'
+    print(topStr)
+
+    for i in range(0,len(ftRpmVals)):
+        rowStr = str(ftRpmVals[i]) + '\t'
+        for j in range(0,len(ftTpVals)):
+            cell = ast[j][i]
+            afr = cell[3][0]
+            std = cell[3][1]
+            afrText = "{:.1f}".format(afr)
+            rowStr = rowStr + afrText + '\t'
+        print(rowStr)
+            
 
 def readLogData(fp):
     with open(fp, newline='\r\n') as csvfile:
@@ -89,5 +148,10 @@ if __name__ == "__main__":
     logData = readLogData(logFilePath + "\\" + logFileFile)
     print('Number of valid data samples found:')
     print(logData.shape[0])
-    extractLogVals(tps=10.0, rpm=3500.0, ld=logData)
+    # eVals = extractLogVals(tps=5.0, rpm=4000.0, ld=logData)
+    # stats = calcAfrStat(eVals)
+    # print(stats)
+    ast = calcAfrTable(logData)
+    printAfrTable(ast)
+    
 
