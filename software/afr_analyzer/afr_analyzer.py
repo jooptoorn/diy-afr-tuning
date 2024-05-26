@@ -100,15 +100,31 @@ def printAfrTable(ast):
     print(topStr)
 
     for i in range(0,len(ftRpmVals)):
-        rowStr = str(ftRpmVals[i]) + '\t'
+        rowStrU = str(ftRpmVals[i]) + '\t'
+        rowStrD = '\t'
         for j in range(0,len(ftTpVals)):
             cell = ast[j][i]
             afr = cell[3][0]
             std = cell[3][1]
             afrText = "{:.1f}".format(afr)
-            rowStr = rowStr + afrText + '\t'
-        print(rowStr)
-            
+            stdText = "{:.1f}".format(std)
+            rowStrU = rowStrU + afrText + '\t'
+            rowStrD = rowStrD + stdText + '\t'
+        # print(rowStrU)
+        # print(rowStrD)
+
+# remove logdata where the throttle has just been opened or closed
+# throttle variation causes considerable AFR fluctuations and we do not
+# want to base fuel map improvements on such values. This can only be done for 
+# the original log where values are chronologically ordered
+def filterThrottleVariation(ld):
+    fld = ld
+    return fld
+
+#
+def filterMedian(cell):
+    fcell = cell
+    return fcell
 
 def readLogData(fp):
     with open(fp, newline='\r\n') as csvfile:
