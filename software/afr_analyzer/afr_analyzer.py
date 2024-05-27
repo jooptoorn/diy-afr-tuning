@@ -37,6 +37,8 @@ ftRpmValLim = 200.0   # example: extract all values around 5.000rpm with ftRpmVa
 # Taking a window of 2*filTpWindowLen + 1 sample, calculate the average Tp value within the window. 
 # Sum the magnitude of the delta of each sample with that average to obtain a measure of the variation 
 # within the window, accepting (an average) maximum variation of filTpMaxSumDelta per sample
+filTpEnabled = True
+
 # Consider X samples before and after a sample to detect variations
 filTpWindowLen = 2
 
@@ -46,6 +48,19 @@ filTpMaxSumDelta = 3.0
 
 # Throw away filTpFilterLen samples after end of the throttle variation to ignore 'after effects' on AFR of the variation
 filTpFilterLen = 12
+
+#
+#
+#       Median filter
+#
+#
+# In function extractLogVals, all the log entries are extracted that are close to a certain TPS and RPM combination in the fuel table.
+# The median filter takes a 'cell' (all log entries that are returned by extractLogVals(rpm, tps)),
+# orders the data based on AFR values and deletes the outer portions, keeping the median values
+filMedEnabled = True
+
+# What portion of the dataset to KEEP (the values below and above the center value are 1/2 of this portion each)
+filMedFrac = 0.7
 
 # function to extract all values around a certain fuel table cell defined by a combination of tps and rpm value
 def extractLogVals(tps, rpm, ld):
@@ -89,10 +104,20 @@ def calcAfrTable(ld):
     # and calculating AFR statistics for all cells
     ftAfrStat = []
 
+    # first filter out throttle variations
+    fld = ld
+    if(filTpEnabled):
+        fld = filterThrottleVariation(fld)
+
     for ftTp in ftTpVals:
         ftAfrStatColumn = [[]]
         for ftRpm in ftRpmVals:
-            afrData = extractLogVals(ftTp, ftRpm,ld)
+            afrData = extractLogVals(ftTp, ftRpm,fld)
+
+            # perform median filtering if enabled, gets rid of outliers in this TPS, RPM combination
+            if(filMedEnabled):
+                afrData = filterMedian(afrData)
+                
             afrStat = calcAfrStat(afrData)
             ftAfrCell = [ftRpm, ftTp, afrData, afrStat]
             if(ftAfrStatColumn==[[]]):
@@ -233,9 +258,15 @@ def filterThrottleVariation(ld):
 
     return fld
 
-#
+# calculates median AFR value from a set of values
+# input format is the same as output format of extractLogVals()
 def filterMedian(cell):
+    # filtered cell
     fcell = cell
+
+    # order data
+
+
     return fcell
 
 def readLogData(fp):
@@ -277,11 +308,10 @@ if __name__ == "__main__":
     print('Number of valid data samples found:')
     print(logData.shape[0])
 
-    filteredLogData = filterThrottleVariation(logData)
     # eVals = extractLogVals(tps=5.0, rpm=4000.0, ld=logData)
     # stats = calcAfrStat(eVals)
     # print(stats)
-    ast = calcAfrTable(filteredLogData)
+    ast = calcAfrTable(logData)
     
     printAfrStdAvg(ast)
     printAfrTable(ast)
