@@ -9,8 +9,8 @@ plt.rcParams['axes.grid'] = True
 
 logFilePath = "C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\20240520 first ride no accel pump"
 # logFileFile = "warmup.log"
-# logFileFile = "1st-ride-w-max-rev.log"
-logFileFile = "ride_home.log"
+logFileFile = "1st-ride-w-max-rev.log"
+# logFileFile = "ride_home.log"
 
 # fuel table throttle position columns in fuel table of PCIII
 ftTpVals = [0.0, 2.0, 5.0, 10.0, 20.0, 40.0, 60.0, 80.0, 100.0]
@@ -144,19 +144,26 @@ def printAfrTable(ast):
         topStr = topStr + str(tp) + '\t'
     print(topStr)
 
+    # loop over columns (inner) then over row (outer) of fuel table
     for i in range(0,len(ftRpmVals)):
+        # upper string is AFR value
+        # lower string is standard deviation for that AFR dataset
         rowStrU = str(ftRpmVals[i]) + '\t'
         rowStrD = '\t'
         for j in range(0,len(ftTpVals)):
             cell = ast[j][i]
+            # for every cell of data in the fuel table, the 4th element contains the
+            # mean and std value for the dataset that is in the 3rd element
             afr = cell[3][0]
             std = cell[3][1]
             afrText = "{:.1f}".format(afr)
             stdText = "{:.1f}".format(std)
             rowStrU = rowStrU + afrText + '\t'
             rowStrD = rowStrD + stdText + '\t'
-        # print(rowStrU)
-        print(rowStrD)
+        print(rowStrU)
+        # print(rowStrD)
+    
+    print("\r\n")
 
 # print average standard deviation in AFR-statistics table. Used for debugging only
 def printAfrStdAvg(ast):
@@ -180,14 +187,18 @@ def printAfrSamples(ast):
         topStr = topStr + str(tp) + '\t'
     print(topStr)
 
+    # loop over columns (inner) then over row (outer) of fuel table
     for i in range(0,len(ftRpmVals)):
         rowStr = str(ftRpmVals[i]) + '\t'
         for j in range(0,len(ftTpVals)):
             cell = ast[j][i]
+            # for every cell of data in the fuel table, the 3rd element contains the log-data
             num = cell[2].shape[0]
             numText = "{:d}".format(num)
             rowStr = rowStr + numText + '\t'
         print(rowStr)
+
+    print("\r\n")
 
 # remove logdata where the throttle has just been opened or closed
 # throttle variations cause considerable AFR fluctuations and we do not
@@ -350,7 +361,7 @@ if __name__ == "__main__":
     ast = calcAfrTable(logData)
     
     printAfrStdAvg(ast)
-    # printAfrTable(ast)
+    printAfrTable(ast)
     printAfrSamples(ast)
     
 
