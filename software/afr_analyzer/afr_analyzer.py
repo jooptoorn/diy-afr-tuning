@@ -137,6 +137,7 @@ def calcAfrTable(ld):
 
 # print the AFR-statistic table 
 def printAfrTable(ast):
+    print("Printing AFR statistics in fuel table analysis")
     # top row
     topStr = "RPM-TPS\t"
     for tp in ftTpVals:
@@ -169,6 +170,24 @@ def printAfrStdAvg(ast):
                 stdSum.append(std)
     stdAvg = sum(stdSum)/len(stdSum)
     print("Average standard deviation in AFR values: {:.2f}".format(stdAvg))
+
+# print amount of log-entries used on AFR-statistics table. Used for debugging only
+def printAfrSamples(ast):
+    print("Printing number of AFR samples used in fuel table analysis")
+    # top row
+    topStr = "RPM-TPS\t"
+    for tp in ftTpVals:
+        topStr = topStr + str(tp) + '\t'
+    print(topStr)
+
+    for i in range(0,len(ftRpmVals)):
+        rowStr = str(ftRpmVals[i]) + '\t'
+        for j in range(0,len(ftTpVals)):
+            cell = ast[j][i]
+            num = cell[2].shape[0]
+            numText = "{:d}".format(num)
+            rowStr = rowStr + numText + '\t'
+        print(rowStr)
 
 # remove logdata where the throttle has just been opened or closed
 # throttle variations cause considerable AFR fluctuations and we do not
@@ -331,6 +350,7 @@ if __name__ == "__main__":
     ast = calcAfrTable(logData)
     
     printAfrStdAvg(ast)
-    printAfrTable(ast)
+    # printAfrTable(ast)
+    printAfrSamples(ast)
     
 
