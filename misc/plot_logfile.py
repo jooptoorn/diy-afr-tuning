@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 # setting grid on here is easiest
 plt.rcParams['axes.grid'] = True
 
-logFilePath = "C:\\Users\\joopt\\OneDrive\\motor\\ride_home.log"
+logFilePath = "C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\20240520 first ride no accel pump\\ride_home.log"
 # logFilePath = "C:\\Users\\joopt\\OneDrive\\motor\\1st-ride-w-max-rev.log"
 
 def readLogData(fp):
@@ -99,5 +99,5 @@ if __name__ == "__main__":
     print('Number of valid data samples found:')
     print(logData.shape[0])
     # plotAfrData(logData, 0,logData.shape[0]-1)
-    plotAfrData(logData, 5400,6000)
-    # plotAfrData(logData, 2500,5000)
+    # plotAfrData(logData, 5400,6000)
+    plotAfrData(logData, 1400,2000)
