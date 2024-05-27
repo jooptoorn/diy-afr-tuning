@@ -261,11 +261,28 @@ def filterThrottleVariation(ld):
 # calculates median AFR value from a set of values
 # input format is the same as output format of extractLogVals()
 def filterMedian(cell):
+    # some cells will contain no or little data because there are no log values for that tp, rpm combination
+    # in that case, return immediately.
+    if(cell.shape[0] < 3):
+        return cell
+    
     # filtered cell
     fcell = cell
 
     # order data
+    fcell = fcell[fcell[:,2].argsort()]
 
+    # calculate lower and upper index that must remain part of the fraction we keep
+    keepNum = round(fcell.shape[0]*filMedFrac)
+
+    # calculate which samples are to be removed
+    # note that the rounding below will result in reporting slightly richer/leaner AFR values for
+    # data cells with a low amount of log entries, as round() can round X.5 up or down
+    # depending on standard used
+
+    idxL = round(0.5*(fcell.shape[0] - keepNum))
+    idxU = idxL + keepNum
+    fcell = fcell[idxL:idxU,:]
 
     return fcell
 
