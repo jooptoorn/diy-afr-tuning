@@ -62,6 +62,34 @@ filMedEnabled = True
 # What portion of the dataset to KEEP (the values below and above the center value are 1/2 of this portion each)
 filMedFrac = 0.7
 
+#
+#
+#       Target AFR
+#
+#
+# Refer to the example excel in misc to find a visual overview of the fuel table
+# The target AFRs are calculated according to
+# - a leanest and richest value
+# - a function for RPM
+# - a function for throttle opening
+# 
+# the RPM and TPS function both of the form
+# (var / SCALE)^POWER
+#
+# SCALE influences at what value of TPS or RPM the richest AFR will be reached. That can also
+# be at very large values (300% TP or 50.000RPM) to decrease the total influence of TPS/RPM on the AFR
+# POWER determines how exponential the influence of RPM or TPS is. This is usefull to keep all values around
+# 0% - 10% throttle at an economical AFR, 
+# while all values from a certain larger throttle opening will be at the richest value.
+afrMin = 12.6
+afrMax = 14.5
+
+afrTpScale = 100    # at what TPS value will min AFR be reached?
+afrTpPow = 0.5      # how exponential does throttle opening influence AFR?
+
+afrRpmScale = 19000 # at what RPM value will min AFR be reached?
+afrRpmPow = 1.7     # how exponential does RPM value influence AFR?
+
 # function to extract all values around a certain fuel table cell defined by a combination of tps and rpm value
 def extractLogVals(tps, rpm, ld):
     # value check before attempting to extract log values
@@ -135,6 +163,20 @@ def calcAfrTable(ld):
     
     return ftAfrStat
 
+# calculate the target AFR
+def calcTargetAfr(rpm, tps):
+    # calculate general scale between min and max
+    afrScale = afrMin - afrMax
+
+    # get target AFR based on general scale, scale of rpm/tps relative to that, and how exponential their influence is
+    targetAfr = afrMax + afrScale*(rpm/afrRpmScale)**afrRpmPow + afrScale*(tps/afrTpScale)**afrTpPow
+    
+    # round to min and max afr values
+    targetAfr = min(targetAfr, afrMax)
+    targetAfr = max(targetAfr, afrMin)
+    
+    return targetAfr
+
 # print the AFR-statistic table 
 def printAfrTable(ast):
     print("Printing AFR statistics in fuel table analysis")
@@ -196,6 +238,29 @@ def printAfrSamples(ast):
             num = cell[2].shape[0]
             numText = "{:d}".format(num)
             rowStr = rowStr + numText + '\t'
+        print(rowStr)
+
+    print("\r\n")
+
+# print the target AFR table
+def printAfrTargets():
+    print("Printing AFR target values used in fuel table analysis")
+    # top row
+    topStr = "RPM-TPS\t"
+    for tp in ftTpVals:
+        topStr = topStr + str(tp) + '\t'
+    print(topStr)
+
+    # loop over columns (inner) then over row (outer) of fuel table
+    for i in range(0,len(ftRpmVals)):
+        rowStr = str(ftRpmVals[i]) + '\t'
+        for j in range(0,len(ftTpVals)):
+            rpm = ftRpmVals[i]
+            tps = ftTpVals[j]
+            afr = calcTargetAfr(rpm,tps)
+            
+            text = "{:.1f}".format(afr)
+            rowStr = rowStr + text + '\t'
         print(rowStr)
 
     print("\r\n")
@@ -360,8 +425,9 @@ if __name__ == "__main__":
     # print(stats)
     ast = calcAfrTable(logData)
     
-    printAfrStdAvg(ast)
-    printAfrTable(ast)
-    printAfrSamples(ast)
+    # printAfrStdAvg(ast)
+    # printAfrTable(ast)
+    # printAfrSamples(ast)
+    printAfrTargets()
     
 
