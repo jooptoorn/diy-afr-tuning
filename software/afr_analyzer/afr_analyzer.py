@@ -265,6 +265,38 @@ def printAfrTargets():
 
     print("\r\n")
 
+# print AFR difference with target
+def printAfrDelta(ast):
+    print("Printing AFR delta with target in fuel table analysis")
+    # top row
+    topStr = "RPM-TPS\t"
+    for tp in ftTpVals:
+        topStr = topStr + str(tp) + '\t'
+    print(topStr)
+
+    # loop over columns (inner) then over row (outer) of fuel table
+    for i in range(0,len(ftRpmVals)):
+        rowStr = str(ftRpmVals[i]) + '\t'
+        for j in range(0,len(ftTpVals)):
+            rpm = ftRpmVals[i]
+            tps = ftTpVals[j]
+            cell = ast[j][i]
+            # for every cell of data in the fuel table, the 4th element contains the
+            # mean and std value for the dataset that is in the 3rd element
+            realAfr   = cell[3][0]
+            targetAfr = calcTargetAfr(rpm, tps)
+
+            # 0.0      = perfect
+            # positive = too lean
+            # negative = too rich 
+            deltaAfr  = realAfr - targetAfr
+            text = "{:.1f}".format(deltaAfr)
+
+            rowStr = rowStr + text + '\t'
+        print(rowStr)
+    
+    print("\r\n")
+
 # remove logdata where the throttle has just been opened or closed
 # throttle variations cause considerable AFR fluctuations and we do not
 # want to base fuel map improvements on such values. 
@@ -427,7 +459,8 @@ if __name__ == "__main__":
     
     # printAfrStdAvg(ast)
     # printAfrTable(ast)
-    # printAfrSamples(ast)
-    printAfrTargets()
+    printAfrSamples(ast)
+    # printAfrTargets()
+    # printAfrDelta(ast)
     
 
