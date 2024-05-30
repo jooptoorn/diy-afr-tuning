@@ -239,41 +239,44 @@ void loop() {
     Functionality simulation
 
   */
-  if (state == sensor_init)
+  if(SIMULATING)
   {
-    //write the expected 2.5V to both afr channels, this happens at power-on
-    analogWrite(afrValSimPin, simAfrValWarmupPwm);
-    analogWrite(afrStatusSimPin, simAfrValWarmupPwm);
-    //wait for RC filter output to stabilize
-    delay(250);
-  }
-  else if (state == calibrate)
-  {
+    if (state == sensor_init)
+    {
+      //write the expected 2.5V to both afr channels, this happens at power-on
+      analogWrite(afrValSimPin, simAfrValWarmupPwm);
+      analogWrite(afrStatusSimPin, simAfrValWarmupPwm);
+      //wait for RC filter output to stabilize
+      delay(250);
+    }
+    else if (state == calibrate)
+    {
 
-  }
-  else if (state == capture)
-  {
-    //generate and write AFR values, bound in range 0 - 255
-    int simAfrVal = random(simAfrValAvgPwm - simAdcVar, simAfrValAvgPwm + simAdcVar);
-    simAfrVal = max(0, min(simAfrVal, 255));
-    int simAfrStat = random(simAfrStatAvgPwm - simAdcVar, simAfrStatAvgPwm + simAdcVar);
-    simAfrStat = max(0, min(simAfrStat, 255));
-    analogWrite(afrValSimPin, simAfrVal);
-    analogWrite(afrStatusSimPin, simAfrStat);
+    }
+    else if (state == capture)
+    {
+      //generate and write AFR values, bound in range 0 - 255
+      int simAfrVal = random(simAfrValAvgPwm - simAdcVar, simAfrValAvgPwm + simAdcVar);
+      simAfrVal = max(0, min(simAfrVal, 255));
+      int simAfrStat = random(simAfrStatAvgPwm - simAdcVar, simAfrStatAvgPwm + simAdcVar);
+      simAfrStat = max(0, min(simAfrStat, 255));
+      analogWrite(afrValSimPin, simAfrVal);
+      analogWrite(afrStatusSimPin, simAfrStat);
 
-    //generate and write TPS values
-    int simTpsVal = random(simTpsValAvgPwm - simAdcVar, simTpsValAvgPwm + simAdcVar);
-    simTpsVal = max(0, min(simTpsVal, 255));
-    analogWrite(tpsSimPin, simTpsVal);
+      //generate and write TPS values
+      int simTpsVal = random(simTpsValAvgPwm - simAdcVar, simTpsValAvgPwm + simAdcVar);
+      simTpsVal = max(0, min(simTpsVal, 255));
+      analogWrite(tpsSimPin, simTpsVal);
 
-    //generate RPM
-    static bool rpmSig = false;
-    rpmSig = !rpmSig;
-    digitalWrite(ignSimPin, rpmSig);
-  }
-  else if (state == wait)
-  {
+      //generate RPM
+      static bool rpmSig = false;
+      rpmSig = !rpmSig;
+      digitalWrite(ignSimPin, rpmSig);
+    }
+    else if (state == wait)
+    {
 
+    }
   }
 
   /*
