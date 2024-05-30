@@ -466,8 +466,8 @@ void calibrateSensor(void)
     //if(ch1Val >= calRef1l && ch1Val <= calRef1l && ch2Val >= warmingStatusRefL && ch2Val <= warmingStatusRefH)
     if (isInValidRange(ch1Val, afrCalExpectedVal, maxAdcDelta) && isInValidRange(ch2Val, afrCalExpectedStatus, maxAdcDelta))
     {
-      //wait for IO transition effects to subsize
-      delay(250);
+      //wait for IO transition effects to subsize (up to a few seconds the bias changes when measured..)
+      delay(6000);
 
       //re-read ch1 value using a filtered ADC read
       ch1Val = readSensorVal(afrSensorPin);
@@ -475,6 +475,10 @@ void calibrateSensor(void)
 
       //check out-of-bound conditions
       if (isInValidRange(afrBiasVal, 0, maxAdcDelta))
+
+      //check if the sensor is still in warming up mode while we waited
+      int ch2Val = analogRead(afrStatusPin);
+      if(isInValidRange(ch2Val, afrCalExpectedStatus, maxAdcDelta))
         calibrationWorked = true;
     }
   }
