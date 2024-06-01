@@ -1,4 +1,4 @@
-#define SIMULATING 0
+#define SIMULATING 1
 
 typedef enum
 {
@@ -143,6 +143,7 @@ void setup() {
   {
     initTimer();
     pinMode(ignSimPin, OUTPUT);
+    randomSeed(analogRead(2));
   }
 
   // initialize buffers
@@ -153,6 +154,8 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   static state_t state = sensor_init;
+  bool afrSwitchedToHeating;
+  static bool prevAfrWasHeating = true;
 
   /*
 
@@ -202,15 +205,21 @@ void loop() {
     if (afrOperational)
       Serial.print(",\tSTATUS=OK");
     else if (afrHeating)
-      Serial.print(",\tSTATUS=HEATING SENSOR");
+      Serial.print(",\tSTATUS=HEATING_SENSOR");
     else if (afrError)
       Serial.print(",\tSTATUS=ERROR");
     else
     {
-      Serial.print("\tSTATUS=INVALID VAL=");
+      Serial.print("\tSTATUS=INVALID-VAL=");
       float statVoltage = ((float) afrStatusVal / (float) maxAdcVal) * (float) maxAdcVolt;
       Serial.print(statVoltage);
     }
+
+    //detection if lambda controller has reset and started a heating cycle again
+    //This happens either when a fault occurs or when power has switched on/off by the driver, which can be used to mark events in the logfile
+    //initialize to current value to avoid false detection
+    afrSwitchedToHeating = (prevAfrWasHeating == false) & (afrHeating == true);
+    prevAfrWasHeating = afrHeating;
 
     /*
 
@@ -231,7 +240,7 @@ void loop() {
   {
     delay(10);
     if (SIMULATING)
-      delay(2000);
+      delay(1000);
   }
 
 
@@ -261,6 +270,20 @@ void loop() {
       simAfrVal = max(0, min(simAfrVal, 255));
       int simAfrStat = random(simAfrStatAvgPwm - simAdcVar, simAfrStatAvgPwm + simAdcVar);
       simAfrStat = max(0, min(simAfrStat, 255));
+
+      //once every while, simulate the lambda controller has restarted
+      long randNum = random(0,20);
+      if((randNum < 1) |  afrSwitchedToHeating)
+      {
+        //happens in 5% of cases. We will need one whole iteration of state == capture for the
+        //algorithm to pickup this event, in which case (afrSwitchedToHeating) we want to keep simulating the sensor is heating
+        //write the expected 2.5V to both afr channels
+        simAfrVal = simAfrValWarmupPwm;
+        simAfrStat = simAfrValWarmupPwm;
+        //wait for RC filter output to stabilize
+        delay(250);
+      }
+      //write to outputs
       analogWrite(afrValSimPin, simAfrVal);
       analogWrite(afrStatusSimPin, simAfrStat);
 
@@ -297,7 +320,33 @@ void loop() {
   }
   else if (state == capture)
   {
-    state = wait;
+    //If we detect lambda controller has started a heating cycle again, either there was a fault or the user has switched power to the unit on/off
+    //In either case it is a good idea to restart a calibration cycle.
+    //
+    //This code is specifically designed around the following sequence of events:
+    //An onboard motorcycle unit that logs output of the AFR-logger (for ex a raspberry pi) is booting, while this arduino is already powered and
+    //transmitting data. In this situation, the initial calibration output will not be seen by the motorcycle unit, so we cannot verify if the calibration
+    //values make sense. 
+    //If the motorcycle user switches power on/off after a while when the motorcycle unit has booted up, 
+    //it will restart the lambda controller. This will trigger a re-calibration after which
+    //the logfile will also contain the new calibration data that can be seen after the ride
+
+    //This mechanism also solves the problem when the motorcycle unit resets the arduino by initializing serial communication
+    //In this case the arduino will not see a heating lambda controller and skips the calibration (may lead to large offsets of +/-0.5AFR in the log)
+    //The user can switch power on/off after a while to ensure the arduino will get to see a calibration at least once after
+    //the motorcycle unit has started to log.
+
+    //Optionally the user can decide to use this mechanism as a "this is where my logs starts marker" and throw away prior log values while analyzing.
+    if(afrSwitchedToHeating)
+    {
+      Serial.println("Detected a restart of lambda controller, perform re-calibration");
+      state = calibrate;
+    }
+    else
+    {
+      //everything is normal, go to wait state to avoid printing a extremely high rates
+      state = wait;
+    }
   }
   else if (state == wait)
   {
