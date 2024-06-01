@@ -219,10 +219,13 @@ void loop() {
 
     //detection if lambda controller has reset and started a heating cycle again
     //This happens either when a fault occurs or when power has switched on/off by the driver, which can be used to mark events in the logfile
-    //initialize to current value to avoid false detection
-    afrSwitchedToHeating = (prevAfrWasHeating == false) & (afrHeating == true);
-    prevAfrWasHeating = afrHeating;
-
+    //only do this when valid status was received to avoid triggering this mechanism on IO transitions of lambda controller status output
+    if(afrOperational | afrHeating | afrError)
+    {
+      afrSwitchedToHeating = (prevAfrWasHeating == false) & (afrHeating == true);
+      prevAfrWasHeating = afrHeating;
+    }
+    
     /*
 
        Readout of TPS
