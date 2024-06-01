@@ -7,12 +7,12 @@ from scipy.stats import norm
 # setting grid on here is easiest
 plt.rcParams['axes.grid'] = True
 
-logFilePath = "C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\20240520 first ride no accel pump"
-# logFilePath = logFilePath = 'C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\sim_logfiles'
+# logFilePath = "C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\20240520 first ride no accel pump"
+logFilePath = logFilePath = 'C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\testride_pi'
 # logFileFile = "warmup.log"
-logFileFile = "1st-ride-w-max-rev.log"
+# logFileFile = "1st-ride-w-max-rev.log"
 # logFileFile = "ride_home.log"
-# logFileFile = "afr_log7.log"
+logFileFile = "afr_log10.log"
 
 # fuel table throttle position columns in fuel table of PCIII
 ftTpVals = [0.0, 2.0, 5.0, 10.0, 20.0, 40.0, 60.0, 80.0, 100.0]
@@ -342,7 +342,6 @@ def filterThrottleVariation(ld):
             # This is the start of a variation. Find the end using the same arithmetic
             idxVarStart = i
 
-
             for j in range(i+1, ld.shape[0]-filTpWindowLen):
                 # calculate average Tp value around the target
                 avgTp = np.average(ld[j-filTpWindowLen:j+filTpWindowLen+1,1])
@@ -356,7 +355,13 @@ def filterThrottleVariation(ld):
                     break
             
             # j is now either at the end of the variation or at the end of the logdata
-            idxVarEnd = j
+            if(i+1==ld.shape[0]-filTpWindowLen):
+                # happens at end of logdata
+                # set the end of variation so that all samples will be filtered out
+                idxVarEnd = ld.shape[0]
+            else:
+                idxVarEnd = j
+
             if(idxVarEnd + filTpFilterLen >= ld.shape[0]):
                 # reached end of logdata. Filter out everything up to the last sample
                 idxFilterEnd = ld.shape[0]-1
@@ -464,10 +469,10 @@ if __name__ == "__main__":
     # print(stats)
     ast = calcAfrTable(logData)
     
-    # printAfrStdAvg(ast)
+    printAfrStdAvg(ast)
     printAfrTable(ast)
-    # printAfrSamples(ast)
+    printAfrSamples(ast)
     # printAfrTargets()
-    # printAfrDelta(ast)
+    printAfrDelta(ast)
     
 
