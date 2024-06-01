@@ -93,8 +93,8 @@ const int afrStatExpectedValError = maxAdcVal;
    opening that is reported in the power commander software. This last step can be done without running engine, as any difference (static vs running) will be same
    for this logger and the power commander. IT IS IMPORTANT that the reported percentages are exactly the same, especially for 0%, 2%, 5% and 10% throttle openings.
 */
-const float tpsMinVolt = 0.375f;
-const float tpsMaxVolt = 3.53f;
+const float tpsMinVolt = 0.583f;
+const float tpsMaxVolt = 3.764f;
 const int tpsMinAdcVal = (int)((tpsMinVolt / maxAdcVolt) * (float) maxAdcVal);
 const int tpsMaxAdcVal = (int)((tpsMaxVolt / maxAdcVolt) * (float) maxAdcVal);
 const float tpsGain = 100.0f / (tpsMaxVolt - tpsMinVolt);
