@@ -106,6 +106,7 @@ const float tpsGain = 100.0f / (tpsMaxVolt - tpsMinVolt);
 */
 #define rpmFilterLen 5
 unsigned long rpmBuf[rpmFilterLen];
+unsigned long curRpmPulseT = 0;
 
 /*
 
@@ -363,15 +364,26 @@ float calcTp(int adcVal)
   return tp;
 }
 
+//calculates a median filtered value for the RPM
 int calcRpm(void)
 {
-  //calculates a median filtered value for the RPM
+  //track time between invokation of this function and use it to see if engine is actually running
+  unsigned long currentTime = micros();
+  unsigned long deltaT = currentTime - curRpmPulseT;
+  
+  //check if last pulse is more than 250ms ago, at lowest rpm (idle) we would expect to see one pulse every 100ms
+  //this function will report any rpm lower than 1/250ms[events/s]*2[revs/event]*60[s/min] = 480 rpm as 0 rpm
+  if(deltaT > 250000UL)
+  {
+      return 0;
+  }
+  
+  //buffer to copy timing values in that are stored through the ISR
   unsigned long localRpmBuf[rpmFilterLen];
 
   //disable interrupts: the unsigned long could be updated while copying, invalidating the numbers
   noInterrupts();
   memcpy(localRpmBuf, rpmBuf, rpmFilterLen*sizeof(unsigned long));
-
   //return to normal
   interrupts();
 
@@ -525,8 +537,9 @@ void rpmIsr(void)
 //    Serial.println(rpmBuf[i]);
 //  }
 
-  //reset var for next round
+  //reset var for next round, report we found an RPM pulse
   prevTime = currentTime;
+  curRpmPulseT = currentTime;
 }
 
 ISR(TIMER0_COMPA_vect) { //timer0 interrupt 1000Hz toggles pin 13 (LED)
