@@ -272,10 +272,10 @@ void loop() {
       simAfrStat = max(0, min(simAfrStat, 255));
 
       //once every while, simulate the lambda controller has restarted
-      long randNum = random(0,20);
+      long randNum = random(0,50);
       if((randNum < 1) |  afrSwitchedToHeating)
       {
-        //happens in 5% of cases. We will need one whole iteration of state == capture for the
+        //happens in 2% of cases. We will need one whole iteration of state == capture for the
         //algorithm to pickup this event, in which case (afrSwitchedToHeating) we want to keep simulating the sensor is heating
         //write the expected 2.5V to both afr channels
         simAfrVal = simAfrValWarmupPwm;
