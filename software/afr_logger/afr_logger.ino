@@ -241,6 +241,7 @@ void loop() {
     delay(10);
     if (SIMULATING)
       delay(1000);
+      // delay(0);
   }
 
 
@@ -273,19 +274,24 @@ void loop() {
 
       //once every while, simulate the lambda controller has restarted
       long randNum = random(0,50);
-      if((randNum < 1) |  afrSwitchedToHeating)
+      bool pretendAfrRestart = (randNum < 1) |  afrSwitchedToHeating;
+      if(pretendAfrRestart)
       {
         //happens in 2% of cases. We will need one whole iteration of state == capture for the
         //algorithm to pickup this event, in which case (afrSwitchedToHeating) we want to keep simulating the sensor is heating
         //write the expected 2.5V to both afr channels
         simAfrVal = simAfrValWarmupPwm;
         simAfrStat = simAfrValWarmupPwm;
-        //wait for RC filter output to stabilize
-        delay(250);
       }
       //write to outputs
       analogWrite(afrValSimPin, simAfrVal);
       analogWrite(afrStatusSimPin, simAfrStat);
+
+      if(pretendAfrRestart)
+      {
+        //wait for RC filter output to stabilize
+        delay(250);
+      }
 
       //generate and write TPS values
       int simTpsVal = random(simTpsValAvgPwm - simAdcVar, simTpsValAvgPwm + simAdcVar);
