@@ -25,6 +25,7 @@ ftRpmVals = [x * 1.0 for x in range(500, 10500+1, 500)]
 # with a hard limit on +/- X% over or under the target value
 ftTpScaleLim = 0.25   # example: extract all values around 5% with ftTpScaleLim = 0.25. Script will count all values in range [5%*0.75, 5%*1.25] = [3.75, 6.25]
 ftTpValLim = 10.0     # example: extract all values around 80% with ftTpScaleLim = 0.5 i.e. range [40%, 120%] with ftTpValLim = 10 ==> range narrowed to [70%, 90%]
+ftTpZeroLim = 0.5     # when searching for values with 0.0% throttle opening, the above formula would not work. Use a hardcoded value limit of +/- ftTpZeroLim around 0.0
 
 # since rpm rows always have fixed distance of either 500rpm or 250rpm, just use fixed value here
 ftRpmValLim = 200.0   # example: extract all values around 5.000rpm with ftRpmValLim=200.0 => range is [4.800 5.200]
@@ -101,7 +102,11 @@ def extractLogVals(tps, rpm, ld):
     # format of logdata (ld): [rpm, tps, afr]
 
     # first extract all values limited by scaling limit for tps
-    exstrLdIdx = np.where(np.logical_and(ld[:,1] > tps*(1-ftTpScaleLim), ld[:,1] < tps*(1+ftTpScaleLim)))
+    if(tps != 0.0):
+        exstrLdIdx = np.where(np.logical_and(ld[:,1] > tps*(1-ftTpScaleLim), ld[:,1] < tps*(1+ftTpScaleLim)))
+    else:
+        # when searching for 0.0% throttle openings, use another offset as relative scaling doesn't work
+        exstrLdIdx = np.where(np.logical_and(ld[:,1] > -1.0*ftTpZeroLim, ld[:,1] < ftTpZeroLim))
     exstrLdRows = ld[exstrLdIdx]
 
     # throw away values that fall outside of hard limit range for tps
@@ -458,8 +463,8 @@ if __name__ == "__main__":
     ast = calcAfrTable(logData)
     
     # printAfrStdAvg(ast)
-    # printAfrTable(ast)
-    printAfrSamples(ast)
+    printAfrTable(ast)
+    # printAfrSamples(ast)
     # printAfrTargets()
     # printAfrDelta(ast)
     
