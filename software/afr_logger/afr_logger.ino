@@ -1,4 +1,4 @@
-#define SIMULATING 1
+#define SIMULATING 0
 
 typedef enum
 {
@@ -156,6 +156,8 @@ void loop() {
   static state_t state = sensor_init;
   bool afrSwitchedToHeating;
   static bool prevAfrWasHeating = true;
+  static int rpmVal = 0;
+
 
   /*
 
@@ -178,7 +180,7 @@ void loop() {
        Readout of RPM
 
     */
-    int rpmVal = calcRpm();
+    rpmVal = calcRpm();
     Serial.print("RPM=");
     Serial.print(rpmVal);
     
@@ -238,7 +240,16 @@ void loop() {
   }
   else if (state == wait)
   {
-    delay(10);
+    //when engine is not running, do not spam the receiver with a lot of data
+    if(rpmVal == 0)
+    {
+      delay(2000);
+    }
+    else
+    {
+      //engine is running, delay enough time to flush the serial buffer then goto next measurement
+      delay(10);
+    }
     if (SIMULATING)
       delay(1000);
       // delay(0);
