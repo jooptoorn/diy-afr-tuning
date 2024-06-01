@@ -1,0 +1,36 @@
+These instructions will enable automatic AFR logging with a raspberry pi mounted to the motorcycle and connected to the AFR logger
+
+1. Setup a standard raspberry pi with SSH access
+2. Use the pi as hotspot by following instructions on https://www.raspberrypi.com/tutorials/host-a-hotel-wifi-hotspot/ , excluding "Configure connection portal"
+3. Log into the pi using an application like MobaXterm for SSH and upload 
+\software\afr_logger\log_afr_to_disk.py 
+\software\afr_logger\log_launcher.sh
+
+to the home folder. Make sure to update any filepaths in the files to match home directory of the device you are using. 
+Make sure the line endings are in Unix format, which can be double-checked using notepad++ on windows (Edit>EOL Conversions) or nano on the raspberry pi (write-out, if 'DOS conversion' shows up press ALT+D to disable it and write in unix format instead).
+4. execute 
+"chmod +x log_afr_to_disk.py" 
+"chmod +x log_launcher.sh" 
+to make it executable
+
+5. To verify everything works, connect he AFR-logger connected on USB, then execute
+"mkdir afrlogs"
+"mkdir logs"
+"./log_launcher.sh"
+
+output should be 
+Writing to log afrlogs/afr_log1.log
+
+6. Follow instructions on https://www.instructables.com/Raspberry-Pi-Launch-Python-script-on-startup/ to add this launcher to the files executed on startup of the pi - execute:
+"sudo crontab -e"
+Select nano
+Enter line "@reboot sh /home/joop/log_launcher.sh >/home/joop/logs/cronlog 2>&1"
+writeout and exit
+
+7. Reboot (with afr-logger still connected), back in and check if new logs are being written:
+"sudo reboot"
+log back in
+check errors: "cat /logs/cronlog"
+check if logging: 
+"ls -l ~/afrlogs/" (check last filename)
+"cat ~/afrlogs/afr_logXXX.log"

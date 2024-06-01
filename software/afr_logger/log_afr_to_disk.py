@@ -1,8 +1,11 @@
+#!/usr/bin/env python
 import serial
 import os
 
-serDevPath = 'COM12'
-logFolder = 'C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\sim_logfiles\\'
+serDevPath = '/dev/ttyACM0'
+logFolder = 'afrlogs/'
+# serDevPath = 'COM12'
+# logFolder = 'C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\sim_logfiles\\'
 
 ser = serial.Serial(serDevPath, 115200)
 
@@ -21,8 +24,8 @@ file = open(logFp,'xb')
 
 while(1):
     serData = ser.readline()
-    serTextData = serData.decode('utf-8')
-    print(serTextData)
+    # serTextData = serData.decode('utf-8')
+    # print(serTextData)
     file.write(serData)
     file.flush()
 
