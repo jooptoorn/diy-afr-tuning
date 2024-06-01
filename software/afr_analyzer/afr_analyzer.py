@@ -8,9 +8,11 @@ from scipy.stats import norm
 plt.rcParams['axes.grid'] = True
 
 logFilePath = "C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\20240520 first ride no accel pump"
+# logFilePath = logFilePath = 'C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\sim_logfiles'
 # logFileFile = "warmup.log"
 logFileFile = "1st-ride-w-max-rev.log"
 # logFileFile = "ride_home.log"
+# logFileFile = "afr_log7.log"
 
 # fuel table throttle position columns in fuel table of PCIII
 ftTpVals = [0.0, 2.0, 5.0, 10.0, 20.0, 40.0, 60.0, 80.0, 100.0]
