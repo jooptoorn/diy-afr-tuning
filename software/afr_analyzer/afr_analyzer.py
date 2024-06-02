@@ -8,11 +8,11 @@ from scipy.stats import norm
 plt.rcParams['axes.grid'] = True
 
 # logFilePath = "C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\20240520 first ride no accel pump"
-logFilePath = logFilePath = 'C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\testride_pi'
+logFilePath = 'C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\testing\\20240602_street_tuning'
 # logFileFile = "warmup.log"
 # logFileFile = "1st-ride-w-max-rev.log"
 # logFileFile = "ride_home.log"
-logFileFile = "afr_log10.log"
+logFileFile = "afr_log7_accelpump_enabled_huisrit.log"
 
 # fuel table throttle position columns in fuel table of PCIII
 ftTpVals = [0.0, 2.0, 5.0, 10.0, 20.0, 40.0, 60.0, 80.0, 100.0]
@@ -91,9 +91,9 @@ afrMin = 12.6
 afrMax = 14.5
 
 afrTpScale = 100    # at what TPS value will min AFR be reached?
-afrTpPow = 0.5      # how exponential does throttle opening influence AFR?
+afrTpPow = 0.4      # how exponential does throttle opening influence AFR?
 
-afrRpmScale = 19000 # at what RPM value will min AFR be reached?
+afrRpmScale = 18000 # at what RPM value will min AFR be reached?
 afrRpmPow = 1.7     # how exponential does RPM value influence AFR?
 
 # function to extract all values around a certain fuel table cell defined by a combination of tps and rpm value
