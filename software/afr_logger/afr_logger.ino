@@ -220,7 +220,7 @@ void loop() {
     //detection if lambda controller has reset and started a heating cycle again
     //This happens either when a fault occurs or when power has switched on/off by the driver, which can be used to mark events in the logfile
     //only do this when valid status was received to avoid triggering this mechanism on IO transitions of lambda controller status output
-    if(afrOperational | afrHeating | afrError)
+    if(afrOperational | afrHeating)
     {
       afrSwitchedToHeating = (prevAfrWasHeating == false) & (afrHeating == true);
       prevAfrWasHeating = afrHeating;
@@ -552,18 +552,21 @@ void calibrateSensor(void)
     {
       //wait for IO transition effects to subsize (up to a few seconds the bias changes when measured..)
       delay(6000);
-
-      //re-read ch1 value using a filtered ADC read
-      ch1Val = readSensorVal(afrSensorPin);
-      afrBiasVal = ch1Val - afrCalExpectedVal;
-
-      //check out-of-bound conditions
-      if (isInValidRange(afrBiasVal, 0, maxAdcDelta))
-
-      //check if the sensor is still in warming up mode while we waited
       int ch2Val = analogRead(afrStatusPin);
       if(isInValidRange(ch2Val, afrCalExpectedStatus, maxAdcDelta))
-        calibrationWorked = true;
+      {
+        //re-read ch1 value using a filtered ADC read
+        ch1Val = readSensorVal(afrSensorPin);
+        afrBiasVal = ch1Val - afrCalExpectedVal;
+
+        //check out-of-bound conditions
+        if (isInValidRange(afrBiasVal, 0, maxAdcDelta))
+
+        //check if the sensor is still in warming up mode while we waited
+        ch2Val = analogRead(afrStatusPin);
+        if(isInValidRange(ch2Val, afrCalExpectedStatus, maxAdcDelta))
+          calibrationWorked = true;
+      }
     }
   }
 
