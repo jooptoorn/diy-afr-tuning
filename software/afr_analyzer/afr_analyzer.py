@@ -32,6 +32,9 @@ ftTpZeroLim = 0.5     # when searching for values with 0.0% throttle opening, th
 # since rpm rows always have fixed distance of either 500rpm or 250rpm, just use fixed value here
 ftRpmValLim = 200.0   # example: extract all values around 5.000rpm with ftRpmValLim=200.0 => range is [4.800 5.200]
 
+# per cell in the fuel table matrix, only consider analysis when there is a minimum number of datasamples
+ftMinCellSize = 10
+
 # filtering parameters
 # 
 #
@@ -118,6 +121,10 @@ def extractLogVals(tps, rpm, ld):
     # throw away values that fall outside of target rpm range
     exstrLdIdx = np.where(np.logical_and(exstrLdRows[:,0] > rpm-ftRpmValLim, exstrLdRows[:,0] < rpm+ftRpmValLim))
     exstrLdRows = exstrLdRows[exstrLdIdx]
+
+    # if there are not enough log samples for a reliable result, return an empty set instead
+    if(exstrLdRows.shape[0] < ftMinCellSize):
+        exstrLdRows = np.empty([0,3])
     
     return exstrLdRows
 
