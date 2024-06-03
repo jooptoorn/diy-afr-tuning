@@ -13,6 +13,7 @@ logFilePath = 'C:\\Users\\joopt\\OneDrive\\motor\\rsv mille\\tuning\\logger\\tes
 # logFileFile = "1st-ride-w-max-rev.log"
 # logFileFile = "ride_home.log"
 logFileFile = "afr_log7_accelpump_enabled_huisrit.log"
+# logFileFile = "afr_log4_oirschot_to_boxtol_lowrpm_hesitation.log"
 
 # fuel table throttle position columns in fuel table of PCIII
 ftTpVals = [0.0, 2.0, 5.0, 10.0, 20.0, 40.0, 60.0, 80.0, 100.0]
@@ -95,6 +96,15 @@ afrTpPow = 0.4      # how exponential does throttle opening influence AFR?
 
 afrRpmScale = 18000 # at what RPM value will min AFR be reached?
 afrRpmPow = 1.7     # how exponential does RPM value influence AFR?
+
+# Recommendations are made according to some rules:
+# Error with target is large enough
+# The standard deviation does not exceed some value, otherwise it might be better not to tune that value as the data has not been consistent
+
+# When are we done without any further optimization needed?
+afrWithinTargetDelta = 0.3  # if AFR within +/- afrWithinTargetDelta we need no further optimization
+afrMaxStdDev = 0.8          # if Std Dev of AFR in one particular fuel table cell exceeds this number, we do not make recommendations
+afrRecomScaling = 8.0      # if we make a recommendation to update the PCIII fuel cell, recommendation = Delta-with-perfect * afrRecomScaling
 
 # function to extract all values around a certain fuel table cell defined by a combination of tps and rpm value
 def extractLogVals(tps, rpm, ld):
@@ -191,9 +201,9 @@ def calcTargetAfr(rpm, tps):
     
     return targetAfr
 
-# print the AFR-statistic table 
+# print the AFR-table 
 def printAfrTable(ast):
-    print("Printing AFR statistics in fuel table analysis")
+    print("Printing AFR records in fuel table analysis")
     # top row
     topStr = "RPM-TPS\t"
     for tp in ftTpVals:
@@ -220,6 +230,41 @@ def printAfrTable(ast):
         # print(rowStrD)
     
     print("\r\n")
+
+# print the AFR-statistics table 
+def printAfrStd(ast):
+    print("Printing AFR statistics in fuel table analysis")
+    # top row
+    topStr = "RPM-TPS\t"
+    for tp in ftTpVals:
+        topStr = topStr + str(tp) + '\t'
+    print(topStr)
+
+    # loop over columns (inner) then over row (outer) of fuel table
+    for i in range(0,len(ftRpmVals)):
+        # upper string is AFR value
+        # lower string is standard deviation for that AFR dataset
+        rowStr = '\033[30m' + str(ftRpmVals[i]) + '\t'
+
+        for j in range(0,len(ftTpVals)):
+            cell = ast[j][i]
+            # for every cell of data in the fuel table, the 4th element contains the
+            # mean and std value for the dataset that is in the 3rd element
+            std = cell[3][1]
+
+            # use colouring to highlight problems
+            if(std <= 0.5):
+                stdText = "\033[32m {:.1f}".format(std)
+            elif(std > 0.5):
+                stdText = "\033[31m {:.1f}".format(std)
+            else:
+                # happens for invalid numbers such as nan
+                stdText = "\033[30m - "
+            rowStr= rowStr + stdText + '\t'
+        print(rowStr)
+    # reset color to black
+    print("\033[30m\r\n")
+
 
 # print average standard deviation in AFR-statistics table. Used for debugging only
 def printAfrStdAvg(ast):
@@ -290,7 +335,7 @@ def printAfrDelta(ast):
 
     # loop over columns (inner) then over row (outer) of fuel table
     for i in range(0,len(ftRpmVals)):
-        rowStr = str(ftRpmVals[i]) + '\t'
+        rowStr = '\033[30m' + str(ftRpmVals[i]) + '\t'
         for j in range(0,len(ftTpVals)):
             rpm = ftRpmVals[i]
             tps = ftTpVals[j]
@@ -302,14 +347,85 @@ def printAfrDelta(ast):
 
             # 0.0      = perfect
             # positive = too lean
-            # negative = too rich 
+            # negative = too rich
+
             deltaAfr  = realAfr - targetAfr
-            text = "{:.1f}".format(deltaAfr)
+            # print green if within target AFR
+            if((abs(deltaAfr)<=afrWithinTargetDelta)):
+                text = "\033[32m{:.1f}".format(deltaAfr)    
+            # print blue if lean
+            elif(deltaAfr > 0.0):
+                text = "\033[34m\033[47m{:.1f}".format(deltaAfr) + "\033[49m"
+            # print purple if too rich
+            elif(deltaAfr < 0.0):
+                text = "\033[35m\033[47m{:.1f}".format(deltaAfr) + "\033[49m"
+            else:
+                # happens for invalid numbers such as nan
+                text = "\033[30m - "
 
             rowStr = rowStr + text + '\t'
         print(rowStr)
     
-    print("\r\n")
+    print("\033[30m\r\n")
+
+# print fuel table recommendations
+def printFTRecommendation(ast):
+    print("Printing fuel table +/- recommendations to achieve target AFR")
+    # top row
+    topStr = "RPM-TPS\t"
+    for tp in ftTpVals:
+        topStr = topStr + str(tp) + '\t'
+    print(topStr)
+
+    # loop over columns (inner) then over row (outer) of fuel table
+    for i in range(0,len(ftRpmVals)):
+        rowStr = '\033[30m' + str(ftRpmVals[i]) + '\t'
+        for j in range(0,len(ftTpVals)):
+            rpm = ftRpmVals[i]
+            tps = ftTpVals[j]
+            cell = ast[j][i]
+            # for every cell of data in the fuel table, the 4th element contains the
+            # mean and std value for the dataset that is in the 3rd element
+            realAfr   = cell[3][0]
+            std       = cell[3][1]
+            targetAfr = calcTargetAfr(rpm, tps)
+
+            # 0.0      = perfect
+            # positive = too lean
+            # negative = too rich 
+            deltaAfr  = realAfr - targetAfr
+            shouldRecommend = (std <= afrMaxStdDev) & (abs(deltaAfr) > afrWithinTargetDelta)
+
+            # by default, do not make recommendation
+            text = "\033[30m0.0"
+            
+            if(shouldRecommend):
+                # for lean, recommend a positive number => more injector open time => more fuel
+                # for rich, recommend a negative number => less injector time => less fuel
+                ftRecomVal = round(deltaAfr * afrRecomScaling)
+                # print green if within target AFR
+                if((abs(deltaAfr)<=afrWithinTargetDelta)):
+                    text = "\033[32m0.0"    
+                # print blue if lean
+                elif(deltaAfr > 0.0):
+                    text = "\033[34m\033[47m{:.1f}".format(ftRecomVal) + "\033[49m"
+                # print purple if too rich
+                elif(deltaAfr < 0.0):
+                    text = "\033[35m\033[47m{:.1f}".format(ftRecomVal) + "\033[49m"
+                else:
+                    # happens for invalid numbers such as nan
+                    text = "\033[30m - "
+            else:
+            # Print good AFRs in green, inconsistent data with yellow BG
+                if((abs(deltaAfr)<=afrWithinTargetDelta)):
+                    text = "\033[30m\033[42m0.0\033[49m"
+                if(std > afrMaxStdDev):
+                    text = "\033[34m\033[43m0.0\033[49m"
+
+            rowStr = rowStr + text + '\t'
+        print(rowStr)
+    
+    print("\033[30m\r\n")
 
 # remove logdata where the throttle has just been opened or closed
 # throttle variations cause considerable AFR fluctuations and we do not
@@ -478,8 +594,10 @@ if __name__ == "__main__":
     
     printAfrStdAvg(ast)
     printAfrTable(ast)
+    printAfrStd(ast)
     printAfrSamples(ast)
     # printAfrTargets()
     printAfrDelta(ast)
+    printFTRecommendation(ast)
     
 
